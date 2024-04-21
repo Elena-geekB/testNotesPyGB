@@ -12,6 +12,42 @@ def save_note(note):
         file.write(note["content"] + "\n")
         file.write("---\n")
 
+def read_notes():
+    if not os.path.exists("notes.txt"):
+        print("У вас пока нет заметок.")
+        return
+    with open("notes.txt", "r") as file:
+        notes = file.read().split("---\n")
+        for note in notes:
+            if note.strip():
+                title, content = note.split("\n", 1)
+                print(f"Заголовок: {title}")
+                print(f"Содержание: {content}")
+                print("---")
+
+def edit_note():
+    if not os.path.exists("notes.txt"):
+        print("У вас пока нет заметок для редактирования.")
+        return
+    title_to_edit = input("Введите заголовок заметки, которую хотите отредактировать: ")
+    with open("notes.txt", "r") as file:
+        notes = file.read().split("---\n")
+    found = False
+    for i, note in enumerate(notes):
+        if note.strip():
+            title, content = note.split("\n", 1)
+            if title == title_to_edit:
+                found = True
+                new_title = input("Введите новый заголовок заметки: ")
+                new_content = input("Введите новое содержание заметки: ")
+                notes[i] = new_title + "\n" + new_content
+                with open("notes.txt", "w") as file:
+                    file.write("---\n".join(notes))
+                print("Заметка успешно отредактирована.")
+                break
+    if not found:
+        print("Заметка с указанным заголовком не найдена.")
+
 def delete_note():
     if not os.path.exists("notes.txt"):
         print("У вас пока нет заметок для удаления.")
