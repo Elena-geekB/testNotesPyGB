@@ -1,79 +1,77 @@
+import json
 import os
+from datetime import datetime
 
-def create_note():
+def generate_id():
+    return datetime.now().strftime("%Y%m%d%H%M%S%f")
+
+def add_note():
     title = input("Введите заголовок заметки: ")
-    content = input("Введите содержание заметки: ")
-    note = {"title": title, "content": content}
-    return note
+    body = input("Введите содержание заметки: ")
+    note_id = generate_id()
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    note = {"id": note_id, "title": title, "body": body, "timestamp": timestamp}
+    save_note(note)
+    print("Заметка успешно добавлена.")
 
 def save_note(note):
-    with open("notes.txt", "a") as file:
-        file.write(note["title"] + "\n")
-        file.write(note["content"] + "\n")
-        file.write("---\n")
+    if not os.path.exists("notes.json"):
+        with open("notes.json", "w") as file:
+            json.dump([], file)
+    with open("notes.json", "r+") as file:
+        data = json.load(file)
+        data.append(note)
+        file.seek(0)
+        json.dump(data, file, indent=4)
 
 def read_notes():
-    if not os.path.exists("notes.txt"):
+    if not os.path.exists("notes.json"):
         print("У вас пока нет заметок.")
         return
-    with open("notes.txt", "r") as file:
-        notes = file.read().split("---\n")
+    with open("notes.json", "r") as file:
+        notes = json.load(file)
         for note in notes:
-            if note.strip():
-                title, content = note.split("\n", 1)
-                print(f"Заголовок: {title}")
-                print(f"Содержание: {content}")
-                print("---")
+            print(f"ID: {note['id']}")
+            print(f"Заголовок: {note['title']}")
+            print(f"Содержание: {note['body']}")
+            print(f"Дата/время создания: {note['timestamp']}")
+            print("---")
 
 def edit_note():
-    if not os.path.exists("notes.txt"):
-        print("У вас пока нет заметок для редактирования.")
-        return
-    title_to_edit = input("Введите заголовок заметки, которую хотите отредактировать: ")
-    with open("notes.txt", "r") as file:
-        notes = file.read().split("---\n")
-    found = False
-    for i, note in enumerate(notes):
-        if note.strip():
-            title, content = note.split("\n", 1)
-            if title == title_to_edit:
-                found = True
+    note_id = input("Введите ID заметки, которую хотите отредактировать: ")
+    with open("notes.json", "r+") as file:
+        data = json.load(file)
+        for note in data:
+            if note['id'] == note_id:
                 new_title = input("Введите новый заголовок заметки: ")
-                new_content = input("Введите новое содержание заметки: ")
-                notes[i] = new_title + "\n" + new_content
-                with open("notes.txt", "w") as file:
-                    file.write("---\n".join(notes))
+                new_body = input("Введите новое содержание заметки: ")
+                note['title'] = new_title
+                note['body'] = new_body
+                note['timestamp'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                file.seek(0)
+                json.dump(data, file, indent=4)
                 print("Заметка успешно отредактирована.")
-                break
-    if not found:
-        print("Заметка с указанным заголовком не найдена.")
+                return
+        print("Заметка с указанным ID не найдена.")
 
 def delete_note():
-    if not os.path.exists("notes.txt"):
-        print("У вас пока нет заметок для удаления.")
-        return
-    title_to_delete = input("Введите заголовок заметки, которую хотите удалить: ")
-    with open("notes.txt", "r") as file:
-        notes = file.read().split("---\n")
-    found = False
-    for i, note in enumerate(notes):
-        if note.strip():
-            title, content = note.split("\n", 1)
-            if title == title_to_delete:
-                found = True
-                del notes[i]
-                with open("notes.txt", "w") as file:
-                    file.write("---\n".join(notes))
+    note_id = input("Введите ID заметки, которую хотите удалить: ")
+    with open("notes.json", "r+") as file:
+        data = json.load(file)
+        for i, note in enumerate(data):
+            if note['id'] == note_id:
+                del data[i]
+                file.seek(0)
+                json.dump(data, file, indent=4)
                 print("Заметка успешно удалена.")
-                break
-    if not found:
-        print("Заметка с указанным заголовком не найдена.")
+                return
+        print("Заметка с указанным ID не найдена.")
 
 def main():
     while True:
         print("\nМеню:")
-        print("1. Создать новую заметку")
-        print("2. Посмотреть список заметок")
+        print("1. Добавить новую заметку")
+        print("2. Просмотреть список заметок")
         print("3. Редактировать заметку")
         print("4. Удалить заметку")
         print("5. Выйти из программы")
@@ -81,9 +79,7 @@ def main():
         choice = input("Выберите действие: ")
 
         if choice == "1":
-            note = create_note()
-            save_note(note)
-            print("Заметка успешно сохранена.")
+            add_note()
         elif choice == "2":
             read_notes()
         elif choice == "3":
