@@ -41,7 +41,7 @@ def edit_note():
     note_id = input("Введите ID заметки, которую хотите отредактировать: ")
     with open("notes.json", "r+") as file:
         data = json.load(file)
-        for note in data:
+        for i, note in enumerate(data):
             if note['id'] == note_id:
                 new_title = input("Введите новый заголовок заметки: ")
                 new_body = input("Введите новое содержание заметки: ")
@@ -50,6 +50,7 @@ def edit_note():
                 note['timestamp'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 file.seek(0)
                 json.dump(data, file, indent=4)
+                file.truncate()
                 print("Заметка успешно отредактирована.")
                 return
         print("Заметка с указанным ID не найдена.")
@@ -63,6 +64,7 @@ def delete_note():
                 del data[i]
                 file.seek(0)
                 json.dump(data, file, indent=4)
+                file.truncate()
                 print("Заметка успешно удалена.")
                 return
         print("Заметка с указанным ID не найдена.")
